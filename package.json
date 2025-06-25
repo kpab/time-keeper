@@ -2,11 +2,39 @@
   "name": "time-keeper",
   "displayName": "Time Keeper",
   "description": "Force developers to take breaks by disabling VSCode during rest periods",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "publisher": "kpab",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kpab/time-keeper.git"
+  },
+  "homepage": "https://github.com/kpab/time-keeper",
+  "bugs": {
+    "url": "https://github.com/kpab/time-keeper/issues"
+  },
+  "license": "MIT",
+  "keywords": [
+    "pomodoro",
+    "timer",
+    "break",
+    "productivity",
+    "focus",
+    "health",
+    "wellness",
+    "rest",
+    "work-life-balance",
+    "time-management",
+    "concentration",
+    "anti-burnout",
+    "developer-health",
+    "eye-strain",
+    "productivity-tool",
+    "workflow"
+  ],
   "engines": {
     "vscode": "^1.74.0"
   },
-  "categories": ["Other"],
+  "categories": ["Other", "Productivity"],
   "activationEvents": [
     "*"
   ],
