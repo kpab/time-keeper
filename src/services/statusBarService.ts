@@ -5,9 +5,13 @@ export class StatusBarService {
     private menuStatusBarItem: vscode.StatusBarItem;
 
     constructor(context: vscode.ExtensionContext) {
+        console.log('StatusBarService: Creating status bar items');
+        
         // Main timer status bar item
         this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
         this.statusBarItem.command = 'timeKeeper.quickToggle';
+        this.statusBarItem.text = '⏰ Start Timer';
+        this.statusBarItem.show();
         context.subscriptions.push(this.statusBarItem);
 
         // Menu trigger status bar item (for settings)
@@ -15,7 +19,10 @@ export class StatusBarService {
         this.menuStatusBarItem.text = '⚙️';
         this.menuStatusBarItem.command = 'timeKeeper.showMenu';
         this.menuStatusBarItem.tooltip = 'Timer Settings';
+        this.menuStatusBarItem.show();
         context.subscriptions.push(this.menuStatusBarItem);
+        
+        console.log('StatusBarService: Status bar items created and shown');
     }
 
     public updateTimer(text: string, tooltip: string, isRunning: boolean): void {

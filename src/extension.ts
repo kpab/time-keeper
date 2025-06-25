@@ -8,34 +8,140 @@ let timerService: TimerService;
 let editorLockService: EditorLockService;
 let overlayService: OverlayService;
 let syncService: SyncService;
+let statusBarItem: vscode.StatusBarItem;
+let settingsBarItem: vscode.StatusBarItem;
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('Time Keeper extension is now active!');
 
+    // Simple timer state
+    let isRunning = false;
+    let isBreak = false;
+    let remainingTime = 0;
+    let interval: NodeJS.Timeout | undefined;
+
+    // Create status bar items directly
+    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    statusBarItem.text = '⏰ Start Timer';
+    statusBarItem.command = 'timeKeeper.quickToggle';
+    statusBarItem.tooltip = 'Click to start timer';
+    statusBarItem.show();
+    context.subscriptions.push(statusBarItem);
+
+    settingsBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 99);
+    settingsBarItem.text = '⚙️';
+    settingsBarItem.command = 'timeKeeper.showMenu';
+    settingsBarItem.tooltip = 'Timer Settings';
+    settingsBarItem.show();
+    context.subscriptions.push(settingsBarItem);
+
     // Initialize services
-    timerService = new TimerService(context);
     editorLockService = new EditorLockService();
     overlayService = new OverlayService(context);
     syncService = new SyncService(context);
-    
-    // Initialize timer UI
-    timerService.initialize();
+
+    function startTimer() {
+        if (isRunning) {
+            vscode.window.showWarningMessage('Timer is already running!');
+            return;
+        }
+
+        isRunning = true;
+        isBreak = false;
+        const config = vscode.workspace.getConfiguration('timeKeeper');
+        remainingTime = config.get<number>('workDuration', 25) * 60 * 1000;
+
+        vscode.window.showInformationMessage(`Timer started! Work for ${config.get<number>('workDuration', 25)} minutes.`);
+        
+        updateStatusBar();
+        
+        interval = setInterval(() => {
+            remainingTime -= 1000;
+            updateStatusBar();
+
+            if (remainingTime <= 0) {
+                if (isBreak) {
+                    // Break is over
+                    isRunning = false;
+                    if (interval) clearInterval(interval);
+                    editorLockService.unlock();
+                    overlayService.hide();
+                    syncService.broadcastState('idle');
+                    vscode.window.showInformationMessage('Break time is over! Ready to work?', 'Start Timer').then(selection => {
+                        if (selection === 'Start Timer') {
+                            startTimer();
+                        }
+                    });
+                    settingsBarItem.show();
+                } else {
+                    // Work is over, start break
+                    isBreak = true;
+                    remainingTime = config.get<number>('breakDuration', 5) * 60 * 1000;
+                    editorLockService.lock();
+                    overlayService.show();
+                    syncService.broadcastState('break', remainingTime / 1000);
+                    vscode.window.showInformationMessage(`Time for a ${config.get<number>('breakDuration', 5)} minute break!`);
+                }
+                updateStatusBar();
+            }
+        }, 1000);
+
+        // Update overlay timer
+        setInterval(() => {
+            if (isRunning) {
+                const minutes = Math.floor(remainingTime / 60000);
+                const seconds = Math.floor((remainingTime % 60000) / 1000);
+                overlayService.updateTimer(minutes, seconds);
+            }
+        }, 1000);
+
+        settingsBarItem.hide();
+    }
+
+    function stopTimer() {
+        isRunning = false;
+        if (interval) {
+            clearInterval(interval);
+            interval = undefined;
+        }
+        updateStatusBar();
+        vscode.window.showInformationMessage('Timer stopped.');
+        settingsBarItem.show();
+    }
+
+    function updateStatusBar() {
+        if (!isRunning) {
+            statusBarItem.text = '⏰ Start Timer';
+            statusBarItem.tooltip = 'Click to start timer';
+        } else {
+            const minutes = Math.floor(remainingTime / 60000);
+            const seconds = Math.floor((remainingTime % 60000) / 1000);
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            const icon = isBreak ? '☕' : '💻';
+            const mode = isBreak ? 'Break' : 'Work';
+            statusBarItem.text = `${icon} ${mode}: ${timeString}`;
+            statusBarItem.tooltip = 'Click to stop timer';
+        }
+    }
 
     // Register commands
     const startCommand = vscode.commands.registerCommand('timeKeeper.start', () => {
-        timerService.start();
+        startTimer();
     });
 
     const stopCommand = vscode.commands.registerCommand('timeKeeper.stop', () => {
-        timerService.stop();
+        stopTimer();
     });
     
     const quickToggleCommand = vscode.commands.registerCommand('timeKeeper.quickToggle', () => {
-        timerService.toggle();
+        if (isRunning) {
+            stopTimer();
+        } else {
+            startTimer();
+        }
     });
 
     const showMenuCommand = vscode.commands.registerCommand('timeKeeper.showMenu', async () => {
-        // Show quick pick menu
         const action = await vscode.window.showQuickPick([
             '⏱️ Set Work Duration',
             '☕ Set Break Duration',
@@ -90,37 +196,12 @@ export function activate(context: vscode.ExtensionContext) {
 
     const emergencyUnlockCommand = vscode.commands.registerCommand('timeKeeper.emergencyUnlock', () => {
         vscode.window.showWarningMessage('Emergency unlock activated! Timer stopped.', 'OK');
-        timerService.stop();
+        stopTimer();
         editorLockService.unlock();
         overlayService.hide();
     });
 
-    // Subscribe to timer events
-    timerService.onWorkComplete(() => {
-        editorLockService.lock();
-        overlayService.show();
-        const timeInfo = timerService.getRemainingTime();
-        syncService.broadcastState('break', timeInfo.minutes * 60 + timeInfo.seconds);
-    });
-
-    timerService.onBreakComplete(() => {
-        editorLockService.unlock();
-        overlayService.hide();
-        syncService.broadcastState('idle');
-        vscode.window.showInformationMessage('Break time is over! Ready to work?', 'Start Timer').then(selection => {
-            if (selection === 'Start Timer') {
-                timerService.start();
-            }
-        });
-    });
-
-    // Update overlay timer display
-    setInterval(() => {
-        if (timerService.isActive()) {
-            const timeInfo = timerService.getRemainingTime();
-            overlayService.updateTimer(timeInfo.minutes, timeInfo.seconds);
-        }
-    }, 1000);
+    context.subscriptions.push(startCommand, stopCommand, quickToggleCommand, showMenuCommand, emergencyUnlockCommand);
 
     // Listen for sync events from other windows
     syncService.onStateChange((state) => {
@@ -132,14 +213,9 @@ export function activate(context: vscode.ExtensionContext) {
             overlayService.hide();
         }
     });
-
-    context.subscriptions.push(startCommand, stopCommand, quickToggleCommand, showMenuCommand, emergencyUnlockCommand);
 }
 
 export function deactivate() {
-    if (timerService) {
-        timerService.stop();
-    }
     if (editorLockService) {
         editorLockService.unlock();
     }

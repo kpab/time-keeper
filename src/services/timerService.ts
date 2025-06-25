@@ -18,12 +18,14 @@ export class TimerService {
     public readonly onBreakComplete = this.breakCompleteEmitter.event;
 
     constructor(private context: vscode.ExtensionContext) {
+        console.log('TimerService: Initializing');
         const config = vscode.workspace.getConfiguration('timeKeeper');
         this.workDuration = config.get<number>('workDuration', 25) * 60 * 1000; // Convert to milliseconds
         this.breakDuration = config.get<number>('breakDuration', 5) * 60 * 1000;
 
         // Create status bar service
         this.statusBarService = new StatusBarService(context);
+        console.log('TimerService: StatusBarService created');
 
         // Listen for configuration changes
         context.subscriptions.push(
