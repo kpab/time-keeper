@@ -7,7 +7,9 @@
     "vscode": "^1.74.0"
   },
   "categories": ["Other"],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -22,6 +24,14 @@
       {
         "command": "timeKeeper.emergencyUnlock",
         "title": "Time Keeper: Emergency Unlock"
+      },
+      {
+        "command": "timeKeeper.quickToggle",
+        "title": "Time Keeper: Quick Toggle"
+      },
+      {
+        "command": "timeKeeper.showMenu",
+        "title": "Time Keeper: Show Menu"
       }
     ],
     "configuration": {
