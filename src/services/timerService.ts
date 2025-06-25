@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { StatusBarService } from './statusBarService';
 
 export class TimerService {
     private workDuration: number;
@@ -7,7 +8,7 @@ export class TimerService {
     private remainingTime: number = 0;
     private isRunning: boolean = false;
     private isBreakTime: boolean = false;
-    private statusBarItem: vscode.StatusBarItem;
+    private statusBarService: StatusBarService;
     private countdownTimer?: NodeJS.Timeout;
 
     private workCompleteEmitter = new vscode.EventEmitter<void>();
@@ -21,13 +22,8 @@ export class TimerService {
         this.workDuration = config.get<number>('workDuration', 25) * 60 * 1000; // Convert to milliseconds
         this.breakDuration = config.get<number>('breakDuration', 5) * 60 * 1000;
 
-        // Create status bar item
-        this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-        this.statusBarItem.command = 'timeKeeper.toggle';
-        context.subscriptions.push(this.statusBarItem);
-        
-        // Show initial state
-        this.updateStatusBar();
+        // Create status bar service
+        this.statusBarService = new StatusBarService(context);
 
         // Listen for configuration changes
         context.subscriptions.push(
@@ -105,7 +101,7 @@ export class TimerService {
             this.isRunning = false;
             this.breakCompleteEmitter.fire();
             vscode.window.showInformationMessage('Break time is over!');
-            this.statusBarItem.hide();
+            this.updateStatusBar();
         } else {
             // Work time is over, start break
             this.isBreakTime = true;
@@ -118,9 +114,11 @@ export class TimerService {
 
     private updateStatusBar(): void {
         if (!this.isRunning) {
-            this.statusBarItem.text = `$(play) Start Timer`;
-            this.statusBarItem.tooltip = 'Click to start timer';
-            this.statusBarItem.show();
+            this.statusBarService.updateTimer(
+                `⏰ Start Timer`,
+                'Click to start timer',
+                false
+            );
             return;
         }
 
@@ -128,12 +126,14 @@ export class TimerService {
         const seconds = Math.floor((this.remainingTime % 60000) / 1000);
         const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         
-        const icon = this.isBreakTime ? '$(coffee)' : '$(clock)';
+        const icon = this.isBreakTime ? '☕' : '💻';
         const mode = this.isBreakTime ? 'Break' : 'Work';
         
-        this.statusBarItem.text = `${icon} ${mode}: ${timeString}`;
-        this.statusBarItem.tooltip = 'Click to stop timer';
-        this.statusBarItem.show();
+        this.statusBarService.updateTimer(
+            `${icon} ${mode}: ${timeString}`,
+            'Click to stop timer',
+            true
+        );
     }
 
     public getRemainingTime(): { minutes: number; seconds: number; isBreak: boolean } {
@@ -144,5 +144,10 @@ export class TimerService {
 
     public isActive(): boolean {
         return this.isRunning;
+    }
+    
+    public initialize(): void {
+        // Show initial state
+        this.updateStatusBar();
     }
 }
