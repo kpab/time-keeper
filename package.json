@@ -7,9 +7,7 @@
     "vscode": "^1.74.0"
   },
   "categories": ["Other"],
-  "activationEvents": [
-    "onStartupFinished"
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
