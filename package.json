@@ -35,7 +35,7 @@
   "engines": {
     "vscode": "^1.74.0"
   },
-  "categories": ["Other", "Productivity"],
+  "categories": ["Other", "Extension Packs", "Keymaps", "Snippets", "Themes", "Linters"],
   "activationEvents": [
     "onStartupFinished"
   ],
