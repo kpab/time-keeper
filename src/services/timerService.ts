@@ -23,8 +23,11 @@ export class TimerService {
 
         // Create status bar item
         this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-        this.statusBarItem.command = 'timeKeeper.stop';
+        this.statusBarItem.command = 'timeKeeper.toggle';
         context.subscriptions.push(this.statusBarItem);
+        
+        // Show initial state
+        this.updateStatusBar();
 
         // Listen for configuration changes
         context.subscriptions.push(
@@ -67,8 +70,16 @@ export class TimerService {
             this.countdownTimer = undefined;
         }
         
-        this.statusBarItem.hide();
+        this.updateStatusBar();
         vscode.window.showInformationMessage('Timer stopped.');
+    }
+    
+    public toggle(): void {
+        if (this.isRunning) {
+            this.stop();
+        } else {
+            this.start();
+        }
     }
 
     private startCountdown(): void {
@@ -106,13 +117,18 @@ export class TimerService {
     }
 
     private updateStatusBar(): void {
-        if (!this.isRunning) return;
+        if (!this.isRunning) {
+            this.statusBarItem.text = `$(play) Start Timer`;
+            this.statusBarItem.tooltip = 'Click to start timer';
+            this.statusBarItem.show();
+            return;
+        }
 
         const minutes = Math.floor(this.remainingTime / 60000);
         const seconds = Math.floor((this.remainingTime % 60000) / 1000);
         const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         
-        const icon = this.isBreakTime ? '☕' : '💻';
+        const icon = this.isBreakTime ? '$(coffee)' : '$(clock)';
         const mode = this.isBreakTime ? 'Break' : 'Work';
         
         this.statusBarItem.text = `${icon} ${mode}: ${timeString}`;

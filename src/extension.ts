@@ -26,6 +26,10 @@ export function activate(context: vscode.ExtensionContext) {
     const stopCommand = vscode.commands.registerCommand('timeKeeper.stop', () => {
         timerService.stop();
     });
+    
+    const toggleCommand = vscode.commands.registerCommand('timeKeeper.toggle', () => {
+        timerService.toggle();
+    });
 
     const emergencyUnlockCommand = vscode.commands.registerCommand('timeKeeper.emergencyUnlock', () => {
         vscode.window.showWarningMessage('Emergency unlock activated! Timer stopped.', 'OK');
@@ -72,7 +76,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    context.subscriptions.push(startCommand, stopCommand, emergencyUnlockCommand);
+    context.subscriptions.push(startCommand, stopCommand, toggleCommand, emergencyUnlockCommand);
 }
 
 export function deactivate() {
