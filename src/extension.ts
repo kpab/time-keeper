@@ -20,15 +20,15 @@ export function activate(context: vscode.ExtensionContext) {
     let remainingTime = 0;
     let interval: NodeJS.Timeout | undefined;
 
-    // Create status bar items with adjacent priorities
-    statusBarItem = vscode.window.createStatusBarItem('timeKeeper.timer', vscode.StatusBarAlignment.Right, 101);
+    // Create status bar items with high adjacent priorities
+    statusBarItem = vscode.window.createStatusBarItem('timeKeeper.timer', vscode.StatusBarAlignment.Right, 1002);
     statusBarItem.text = '⏰ Start Timer';
     statusBarItem.command = 'timeKeeper.quickToggle';
     statusBarItem.tooltip = 'Click to start timer';
     statusBarItem.name = 'Time Keeper';
     console.log('Creating main status bar item');
     
-    settingsBarItem = vscode.window.createStatusBarItem('timeKeeper.settings', vscode.StatusBarAlignment.Right, 100);
+    settingsBarItem = vscode.window.createStatusBarItem('timeKeeper.settings', vscode.StatusBarAlignment.Right, 1001);
     settingsBarItem.text = '⚙️';
     settingsBarItem.command = 'timeKeeper.showMenu';
     settingsBarItem.tooltip = 'Timer Settings';
