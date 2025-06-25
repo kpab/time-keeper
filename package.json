@@ -4,6 +4,7 @@
   "description": "Force developers to take breaks by disabling VSCode during rest periods",
   "version": "1.0.0",
   "publisher": "kpab",
+  "icon": "icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/kpab/time-keeper.git"
