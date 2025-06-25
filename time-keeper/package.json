@@ -1,0 +1,62 @@
+{
+  "name": "time-keeper",
+  "displayName": "Time Keeper",
+  "description": "Force developers to take breaks by disabling VSCode during rest periods",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "timeKeeper.start",
+        "title": "Time Keeper: Start Timer"
+      },
+      {
+        "command": "timeKeeper.stop",
+        "title": "Time Keeper: Stop Timer"
+      },
+      {
+        "command": "timeKeeper.emergencyUnlock",
+        "title": "Time Keeper: Emergency Unlock"
+      }
+    ],
+    "configuration": {
+      "title": "Time Keeper",
+      "properties": {
+        "timeKeeper.workDuration": {
+          "type": "number",
+          "default": 25,
+          "description": "Work duration in minutes"
+        },
+        "timeKeeper.breakDuration": {
+          "type": "number",
+          "default": 5,
+          "description": "Break duration in minutes"
+        },
+        "timeKeeper.overlayOpacity": {
+          "type": "number",
+          "default": 0.95,
+          "minimum": 0.5,
+          "maximum": 1.0,
+          "description": "Overlay opacity during breaks (0.5-1.0)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "^18.x",
+    "typescript": "^5.0.0"
+  }
+}
