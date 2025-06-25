@@ -36,7 +36,7 @@
   },
   "categories": ["Other", "Productivity"],
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
