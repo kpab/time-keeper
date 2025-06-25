@@ -3,11 +3,13 @@ import { TimerService } from './services/timerService';
 import { EditorLockService } from './services/editorLockService';
 import { OverlayService } from './services/overlayService';
 import { SyncService } from './services/syncService';
+import { BreakTabService } from './services/breakTabService';
 
 let timerService: TimerService;
 let editorLockService: EditorLockService;
 let overlayService: OverlayService;
 let syncService: SyncService;
+let breakTabService: BreakTabService;
 let statusBarItem: vscode.StatusBarItem;
 let settingsBarItem: vscode.StatusBarItem;
 
@@ -20,25 +22,34 @@ export function activate(context: vscode.ExtensionContext) {
     let remainingTime = 0;
     let interval: NodeJS.Timeout | undefined;
 
-    // Create status bar items directly
-    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    // Create status bar items with explicit priority
+    statusBarItem = vscode.window.createStatusBarItem('timeKeeper.timer', vscode.StatusBarAlignment.Right, 1000);
     statusBarItem.text = '⏰ Start Timer';
     statusBarItem.command = 'timeKeeper.quickToggle';
     statusBarItem.tooltip = 'Click to start timer';
-    statusBarItem.show();
-    context.subscriptions.push(statusBarItem);
-
-    settingsBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 99);
+    statusBarItem.name = 'Time Keeper';
+    console.log('Creating main status bar item');
+    
+    settingsBarItem = vscode.window.createStatusBarItem('timeKeeper.settings', vscode.StatusBarAlignment.Right, 999);
     settingsBarItem.text = '⚙️';
     settingsBarItem.command = 'timeKeeper.showMenu';
     settingsBarItem.tooltip = 'Timer Settings';
+    settingsBarItem.name = 'Time Keeper Settings';
+    console.log('Creating settings status bar item');
+
+    // Force show immediately
+    statusBarItem.show();
     settingsBarItem.show();
-    context.subscriptions.push(settingsBarItem);
+    
+    console.log('Status bar items shown');
+    
+    context.subscriptions.push(statusBarItem, settingsBarItem);
 
     // Initialize services
     editorLockService = new EditorLockService();
     overlayService = new OverlayService(context);
     syncService = new SyncService(context);
+    breakTabService = new BreakTabService(context);
 
     function startTimer() {
         if (isRunning) {
@@ -66,6 +77,7 @@ export function activate(context: vscode.ExtensionContext) {
                     if (interval) clearInterval(interval);
                     editorLockService.unlock();
                     overlayService.hide();
+                    breakTabService.hideBreakTab();
                     syncService.broadcastState('idle');
                     vscode.window.showInformationMessage('Break time is over! Ready to work?', 'Start Timer').then(selection => {
                         if (selection === 'Start Timer') {
@@ -79,6 +91,7 @@ export function activate(context: vscode.ExtensionContext) {
                     remainingTime = config.get<number>('breakDuration', 5) * 60 * 1000;
                     editorLockService.lock();
                     overlayService.show();
+                    breakTabService.showBreakTab();
                     syncService.broadcastState('break', remainingTime / 1000);
                     vscode.window.showInformationMessage(`Time for a ${config.get<number>('breakDuration', 5)} minute break!`);
                 }
@@ -86,12 +99,15 @@ export function activate(context: vscode.ExtensionContext) {
             }
         }, 1000);
 
-        // Update overlay timer
+        // Update overlay and break tab timer
         setInterval(() => {
             if (isRunning) {
                 const minutes = Math.floor(remainingTime / 60000);
                 const seconds = Math.floor((remainingTime % 60000) / 1000);
                 overlayService.updateTimer(minutes, seconds);
+                if (isBreak) {
+                    breakTabService.updateTimer(minutes, seconds);
+                }
             }
         }, 1000);
 
@@ -199,6 +215,7 @@ export function activate(context: vscode.ExtensionContext) {
         stopTimer();
         editorLockService.unlock();
         overlayService.hide();
+        breakTabService.hideBreakTab();
     });
 
     context.subscriptions.push(startCommand, stopCommand, quickToggleCommand, showMenuCommand, emergencyUnlockCommand);
@@ -208,9 +225,11 @@ export function activate(context: vscode.ExtensionContext) {
         if (state === 'break') {
             editorLockService.lock();
             overlayService.show();
+            breakTabService.showBreakTab();
         } else if (state === 'work') {
             editorLockService.unlock();
             overlayService.hide();
+            breakTabService.hideBreakTab();
         }
     });
 }
@@ -221,6 +240,9 @@ export function deactivate() {
     }
     if (overlayService) {
         overlayService.hide();
+    }
+    if (breakTabService) {
+        breakTabService.hideBreakTab();
     }
     if (syncService) {
         syncService.dispose();
