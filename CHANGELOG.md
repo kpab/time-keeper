@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.0.1] - 2025-06-27
+
+### Changed
+- Updated icon design for better visual appeal
+
 ## [1.0.0] - 2025-06-25
 
 ### Added

@@ -4,6 +4,10 @@
 
 Time Keeper forces you to take regular breaks by temporarily disabling your VSCode editor, helping prevent burnout and eye strain while maintaining peak coding performance.
 
+<p align="center">
+  <img src="time-keeper.png" alt="Time Keeper" width="200" height="200">
+</p>
+
 [![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/kpab.time-keeper)](https://marketplace.visualstudio.com/items?itemName=kpab.time-keeper)
 [![Downloads](https://img.shields.io/visual-studio-marketplace/d/kpab.time-keeper)](https://marketplace.visualstudio.com/items?itemName=kpab.time-keeper)
 [![Rating](https://img.shields.io/visual-studio-marketplace/r/kpab.time-keeper)](https://marketplace.visualstudio.com/items?itemName=kpab.time-keeper)

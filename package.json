@@ -2,7 +2,7 @@
   "name": "time-keeper",
   "displayName": "Time Keeper",
   "description": "Force developers to take breaks by disabling VSCode during rest periods",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "kpab",
   "icon": "icon.png",
   "repository": {
